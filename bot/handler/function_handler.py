@@ -1,8 +1,4 @@
 import os
-import sqlite3
-
-from aiogram.types import ChatType
-
 from bot.button.inline import send_data, check_data
 from bot.button.reply import phone_number_button, location_button, order_button, new_order_button
 from bot.button.text import name, recept, phone, location, order_accept, buyurtma_berish
@@ -88,6 +84,14 @@ async def from_user_get_name(msg: types.Message, state: FSMContext):
     await msg.answer(location, reply_markup=location_button())
 
 
+@dp.message_handler(state="get_phone")
+async def from_user_get_name(msg: types.Message, state: FSMContext):
+    async with state.proxy() as file:
+        file["phone"] = msg.text
+    await state.set_state("get_location")
+    await msg.answer(location, reply_markup=location_button())
+
+
 @dp.message_handler(content_types=types.ContentType.LOCATION, state="get_location")
 async def from_user_get_name(msg: types.Message, state: FSMContext):
     chat_id = -1001949758516
@@ -99,24 +103,19 @@ async def from_user_get_name(msg: types.Message, state: FSMContext):
 Ismi: {file["name"]}
 Qo`shimcha ma`lumot: {file["data"]}
 Telefon raqami: {file["phone"]}
-Joylashuvi:Latitude: {file["latitude"]}Longitude: {file["longitude"]}
+Joylashuvi:Latitude: {file["latitude"]}  Longitude: {file["longitude"]}
 """
     await bot.send_message(chat_id, message, reply_markup=send_data())
     save_database(file)
-    await msg.answer("Barcha malumotlar muvaffaqiyatli saqlandi botimizdan foydalanganingiz uchun tashakkur!!!😊",reply_markup=new_order_button())
+    await msg.answer("Barcha malumotlar muvaffaqiyatli saqlandi botimizdan foydalanganingiz uchun tashakkur!!!😊",
+                     reply_markup=new_order_button())
     await state.set_state("refresh")
 
 
 @dp.callback_query_handler(lambda c: c.data == order_accept)
 async def process_group_inline_button(callback_query: types.CallbackQuery):
-    print("hello")
     message_id = callback_query.message.message_id
     chat_id = -1001949758516
-    print(callback_query.data)
 
     if callback_query.data == order_accept:
-        print("tcfvgbhnjmk")
         await bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=check_data())
-
-
-
